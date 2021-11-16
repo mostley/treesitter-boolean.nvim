@@ -43,3 +43,6 @@ luac.out
 plugin/dev.vim
 ./build/nvim
 doc/tags
+neovim
+plenary.nvim
+treesitter.nvim
