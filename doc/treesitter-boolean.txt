@@ -1,0 +1,13 @@
+================================================================================
+                                                                *treesitter-boolean.nvim*
+
+treesitter-boolean.nvim is a plugin for boolean transformation logic using treesitter.
+
+To find out more:
+https://github.com/mostley/treesitter-boolean.nvim
+
+  :h TreesitterBoolean
+
+TreesitterBoolean                                                    *TreesitterBoolean*
+    Just say "Hello world!!"
+================================================================================
