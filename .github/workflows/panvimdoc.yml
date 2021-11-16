@@ -15,6 +15,7 @@ jobs:
         uses: kdheepak/panvimdoc@main
         with:
           vimdoc: treesitter-boolean
+          description: ${VIMDOC_PROJECT_DESCRIPTION}
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Auto generate docs"
