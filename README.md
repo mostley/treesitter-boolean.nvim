@@ -11,3 +11,10 @@ use {
   requires = { "nvim-treesitter/nvim-treesitter" }
 }
 ```
+
+# Usage
+
+### :lua require('treesitter-boolean').DeMorgan.invertExpression(<expr>) -> <expr>
+
+Inverts the given expression.
+
