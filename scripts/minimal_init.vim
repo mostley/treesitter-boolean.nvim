@@ -1,8 +1,7 @@
 set rtp+=.
 set rtp+=../plenary.nvim/
-set rtp+=../tree-sitter-lua/
+set rtp+=../treesitter.nvim/
 
 runtime! plugin/plenary.vim
-runtime! plugin/vim.treesitter
-runtime! plugin/nvim-treesitter
+runtime! plugin/treesitter.vim
 runtime! plugin/treesitter-boolean.vim
