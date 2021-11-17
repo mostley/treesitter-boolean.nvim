@@ -43,7 +43,7 @@ luac.out
 plugin/dev.vim
 ./build/nvim
 doc/tags
-neovim
+_neovim
 plenary.nvim
 treesitter.nvim
 todays-date
