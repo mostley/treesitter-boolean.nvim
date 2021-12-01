@@ -18,3 +18,6 @@ use {
 
 Inverts the given expression.
 
+# Execute test suite
+
+    make test
