@@ -1,9 +1,9 @@
 local treesitterBoolean = require("../../treesitter-boolean")
 local ts_utils = require("nvim-treesitter.ts_utils")
 
-local setup_file = function(lines)
+local setup_file = function(lines, extension)
   vim.api.nvim_command(":set noswapfile")
-  vim.api.nvim_command(":e! testfile.ts")
+  vim.api.nvim_command(":e! testfile." .. extension)
   for _, line in ipairs(lines) do
     vim.api.nvim_command(":normal o" .. line)
   end
@@ -21,6 +21,10 @@ end
 local buffer_is_same = function(bufnr, expected_lines)
   local buffer_content = buffer_to_string(bufnr)
   local expected_string = table.concat(expected_lines, "\n")
+  -- print("--")
+  -- print("e" .. vim.inspect(expected_string))
+  -- print("i" .. vim.inspect(buffer_content))
+  -- print("--")
   assert.are.same(expected_string, buffer_content)
 end
 
@@ -37,28 +41,28 @@ describe("TreesitterBoolean.demorgan", function()
     describe("[typescript]", function() -----------------------------------------------
       describe("with constants", function() -----------------------------------------------
         it("should invert true to false in assignments", function()
-          local bufnr = setup_file({ [[const a = true;]] })
+          local bufnr = setup_file({ [[const a = true;]] }, "ts")
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
 
           buffer_is_same(bufnr, { "const a = false;" })
         end)
 
         it("should invert false to true in assignments", function()
-          local bufnr = setup_file({ [[const a = false;]] })
+          local bufnr = setup_file({ [[const a = false;]] }, "ts")
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
 
           buffer_is_same(bufnr, { "const a = true;" })
         end)
 
         it("should invert constant in if term", function()
-          local bufnr = setup_file({ "if (true) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "if (true) {", "console.log('always')", "}" }, "ts")
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
 
           buffer_is_same(bufnr, { "if (false) {", "\tconsole.log('always')", "}" })
         end)
 
         it("should invert constant in loop term", function()
-          local bufnr = setup_file({ "while (true) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "while (true) {", "console.log('always')", "}" }, "ts")
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
 
           buffer_is_same(bufnr, { "while (false) {", "\tconsole.log('always')", "}" })
@@ -67,7 +71,7 @@ describe("TreesitterBoolean.demorgan", function()
 
       describe("with boolean variable", function() -----------------------------------------------
         it("should invert variable in assignment", function()
-          local bufnr = setup_file({ "const a = true;", "const b = !a;" })
+          local bufnr = setup_file({ "const a = true;", "const b = !a;" }, "ts")
           vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
 
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
@@ -76,7 +80,7 @@ describe("TreesitterBoolean.demorgan", function()
         end)
 
         it("should invert variable in if term", function()
-          local bufnr = setup_file({ "const a = true;", "if (a) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "const a = true;", "if (a) {", "console.log('always')", "}" }, "ts")
           vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
 
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
@@ -87,7 +91,7 @@ describe("TreesitterBoolean.demorgan", function()
 
       describe("with unary operator", function() -----------------------------------------------
         it("should invert variable in if term", function()
-          local bufnr = setup_file({ "const a = true;", "if (!a) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "const a = true;", "if (!a) {", "console.log('always')", "}" }, "ts")
           vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
 
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
@@ -96,7 +100,7 @@ describe("TreesitterBoolean.demorgan", function()
         end)
 
         it("should invert parenthesized_expression in if term", function()
-          local bufnr = setup_file({ "const a = true;", "if (!(true && a)) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "const a = true;", "if (!(true && a)) {", "console.log('always')", "}" }, "ts")
           vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
 
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
@@ -107,7 +111,7 @@ describe("TreesitterBoolean.demorgan", function()
 
       describe("with and", function() -----------------------------------------------
         it("should invert simple and logic", function()
-          local bufnr = setup_file({ "const a = true;", "if (true && a) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "const a = true;", "if (true && a) {", "console.log('always')", "}" }, "ts")
           vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
 
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
@@ -116,12 +120,34 @@ describe("TreesitterBoolean.demorgan", function()
         end)
 
         it("should invert simple or logic", function()
-          local bufnr = setup_file({ "const a = true;", "if (true || a) {", "console.log('always')", "}" })
+          local bufnr = setup_file({ "const a = true;", "if (true || a) {", "console.log('always')", "}" }, "ts")
           vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
 
           treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
 
           buffer_is_same(bufnr, { "const a = true;", "if (false && !a) {", "\tconsole.log('always')", "}" })
+        end)
+      end)
+    end)
+
+    describe("[python]", function() -----------------------------------------------
+      describe("with and", function() -----------------------------------------------
+        it("should invert simple and logic", function()
+          local bufnr = setup_file({ "a = True", "if True and a:", "print('always')" }, "py")
+          vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
+
+          treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
+
+          buffer_is_same(bufnr, { "a = True", "if False or not a:", "    print('always')" })
+        end)
+
+        it("should invert simple or logic", function()
+          local bufnr = setup_file({ "a = True", "if True or a:", "print('always')" }, "py")
+          vim.api.nvim_command(":normal j") -- move cursor to the start of the if statement
+
+          treesitterBoolean.demorgan.invertExpression(bufnr, ts_utils:get_node_at_cursor())
+
+          buffer_is_same(bufnr, { "a = True", "if False and not a:", "    print('always')" })
         end)
       end)
     end)
